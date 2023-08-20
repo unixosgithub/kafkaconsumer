@@ -27,6 +27,7 @@ data:
         "dbName": "AliDB1",
         "collectionName": "Messages"
       }
+    }
 ---
 apiVersion: v1
 kind: Secret
