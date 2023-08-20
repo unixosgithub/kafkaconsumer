@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace kafkaconsumer.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("/consumer")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]

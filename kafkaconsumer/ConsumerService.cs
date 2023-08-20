@@ -17,114 +17,71 @@ namespace kafkaconsumer
         private readonly Confluent.Kafka.IConsumer<string, string> _consumer;
         private readonly string _topic;
         private CancellationTokenSource _cancellationToken;
-        private readonly string _mongoConnectionURI;
-        private readonly MongoClientSettings _mongoClientSettings;
-
-        private readonly string _dbName;
-        private readonly string _collectionName;
-        private IMongoCollection<MongoDataDocument> _mongoCollection;
-        private readonly MongoClient _mongoClient;
         private readonly IDecryptAsymmetric _decryptAsymmetric;
         private readonly IConsumerSettings _consumerSettings;
-        private readonly IMongoSettings _mongoSettings;
+        private readonly IMongoHelper _mongoHelper;       
 
 
-        public ConsumerService(IConfiguration config, IDecryptAsymmetric decryptAsymmetric)
+        public ConsumerService(IConfiguration config, IDecryptAsymmetric decryptAsymmetric, IMongoHelper mongoHelper)
         {
-            _consumerSettings = config?.GetSection("KafkaSettings")?.Get<ConsumerSettings>();
-            _mongoSettings = config?.GetSection("MongoSettings")?.Get<MongoSettings>();
+            _consumerSettings = config?.GetSection("KafkaSettings")?.Get<ConsumerSettings>();            
 
             _decryptAsymmetric = decryptAsymmetric;
+            _mongoHelper = mongoHelper;
 
             _clientConfig = new ConsumerConfig()
             {
-                BootstrapServers = _consumerSettings.BootstrapServers,
+                BootstrapServers = _consumerSettings?.BootstrapServers,
                 SecurityProtocol = SecurityProtocol.SaslSsl,
                 SaslMechanism = SaslMechanism.Plain,
-                SaslUsername = _consumerSettings.SaslUsername,
-                SaslPassword = _consumerSettings.SaslPassword,
-                GroupId = _consumerSettings.GroupId,
+                SaslUsername = _consumerSettings?.SaslUsername,
+                SaslPassword = _consumerSettings?.SaslPassword,
+                GroupId = _consumerSettings?.GroupId,
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
-            _topic = _consumerSettings.Topic;
-            _dbName = _mongoSettings.DbName;
-            _collectionName = _mongoSettings.CollectionName;
-
+            _topic = _consumerSettings.Topic;            
 
             // Decrypt the password
             string mongoPassword = string.Empty;
             var cryptoSettings = _decryptAsymmetric?.GetConfigSettings();
             if ((cryptoSettings != null))
-            {
-                //try
-                //{
+            {               
                 byte[] cipherText = Convert.FromBase64String(_consumerSettings?.SaslPassword);
                 if (cipherText?.Length > 0)
                 {
                     var decryptedPass = _decryptAsymmetric?.DecryptAsymmetricString(cipherText);
                     _clientConfig.SaslPassword = decryptedPass.Replace("\n", string.Empty);
-                }
-
-                
-                byte[] mongocipherText = Convert.FromBase64String(_mongoSettings?.MongoPassword);
-                if (mongocipherText?.Length > 0)
-                {
-                    var decryptedPass = _decryptAsymmetric?.DecryptAsymmetricString(mongocipherText);
-                    mongoPassword = decryptedPass.Replace("\n", string.Empty);
-                }
-                //}
-                //catch(Exception ex)
-                //{ 
-                //    throw new Exception(ex);
-                //}
-            }
-            //Base64 decode password
-            //byte[] data = Convert.FromBase64String(_mongoSettings?.MongoPassword);
-            //string mongoPassword = System.Text.Encoding.UTF8.GetString(data);
-
-            _mongoConnectionURI = $"mongodb+srv://{_mongoSettings?.MongoUser}:{mongoPassword}@{_mongoSettings?.MongoServer}/?retryWrites=true&w=majority";
-            _mongoClientSettings = MongoClientSettings.FromConnectionString(_mongoConnectionURI) ;
-            _mongoClient = new MongoClient(_mongoClientSettings);
+                }                                           
+            }                        
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             try
-            {
-                try
-                {
-                    if ((_mongoClient != null) && !string.IsNullOrEmpty(_dbName)
-                        && !string.IsNullOrEmpty(_collectionName))
-                    {                        
-                        _mongoCollection = _mongoClient?.GetDatabase(_dbName)?.GetCollection<MongoDataDocument>(_collectionName);
-                    }
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"failed to create a mongo client:{ex.Message}");
-                }
-
+            {                
                 using (var consumerBuilder = new ConsumerBuilder
                     <Ignore, string>(_clientConfig).Build())
                 {
-                    consumerBuilder.Subscribe(_topic);
-                    var cancelToken = new CancellationTokenSource();
+                    consumerBuilder.Subscribe(_topic);                    
 
                     try
                     {
-                        while (true)
+                        while (!cancellationToken.IsCancellationRequested)
                         {
-                            var message = consumerBuilder.Consume(cancelToken.Token);
-                            if (!string.IsNullOrWhiteSpace(message?.Message?.Value))
+                            var readResult = consumerBuilder.Consume(cancellationToken);
+
+                            if (readResult.IsPartitionEOF)
                             {
-                                var doc = new MongoDataDocument() { Value = message?.Message?.Value };
-                                
-                                if (_mongoCollection != null)
-                                {
-                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(doc);
-                                    await _mongoCollection.InsertOneAsync(doc);
-                                }
+                                continue;
+                            }
+
+                            if (readResult.Message == null)
+                                continue;
+                            
+                            if (!string.IsNullOrWhiteSpace(readResult?.Message?.Value))
+                            {
+                                await _mongoHelper?.WriteToDB(readResult?.Message?.Value);                                
                             }
                         }
                     }
