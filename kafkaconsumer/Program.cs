@@ -1,39 +1,38 @@
 using Confluent.Kafka;
 using kafkaconsumer;
 using static Confluent.Kafka.ConfigPropertyNames;
-using kafkaconsumer.kafka;
+using kafkaconsumer.Kafka;
 using kafkaconsumer.mongo;
+using kafkaconsumer.Crypt;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var kafkaSettings = builder.Configuration.GetSection("KafkaSettings").Get<ConsumerSettings>();
-if (kafkaSettings == null)
+builder.Host.ConfigureAppConfiguration((context, config) =>
 {
-    throw new ArgumentNullException(nameof(kafkaSettings));
-}
-
-var mongoSettings = builder.Configuration.GetSection("MongoSettings").Get<MongoSettings>();
-if (mongoSettings == null)
-{
-    throw new ArgumentNullException(nameof(mongoSettings));
-}
+    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+    //config.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: false);
+    config.AddJsonFile("config/appsettings.k8s.json", optional: true, reloadOnChange: false);
+});
 
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IHostedService, ConsumerService>(x => new ConsumerService(kafkaSettings, mongoSettings));
+//builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<IConsumerSettings, ConsumerSettings>();
+builder.Services.AddSingleton<IMongoSettings, MongoSettings>();
+builder.Services.AddSingleton<IDecryptAsymmetric, DecryptAsymmetric>();
+builder.Services.AddSingleton<IHostedService, ConsumerService>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
 app.UseHttpsRedirection();
 

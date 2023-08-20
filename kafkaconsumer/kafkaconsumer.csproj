@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.2.0" />
+    <PackageReference Include="Google.Cloud.Kms.V1" Version="3.7.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="7.0.0" />

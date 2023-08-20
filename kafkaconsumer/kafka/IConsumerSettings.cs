@@ -1,4 +1,4 @@
-﻿namespace kafkaconsumer.kafka
+﻿namespace kafkaconsumer.Kafka
 {
     public interface IConsumerSettings
     {
