@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafkaconsumer-config
+data:
+  appsettings.k8s.json: |-
+    {
+      "KafkaSettings": {
+        "bootstrapServers": "pkc-n3603.us-central1.gcp.confluent.cloud:9092",
+        "securityProtocol": "SASL_SSL",
+        "saslMechanisms": "PLAIN",
+        "saslUsername": "BRJFU6H5I7W5U3UF",
+        "saslPassword": "nMmhhD8ABno9S9w/sAa5y/maUez5uyoGzaWClVA3+zavm2YjxlcNpYogeCeCEwSMcnjSVZsCpewIJvfpAku7ZrAgd9d8AgojmdSLOobHYabhrRwjiKj5k1wCvlkUwtvxQpObVsd5/2pRTGAXNQZWZT2vQn4SFUDRS44eTs3zEYB7XIBB1luN+6r0YDScF7vaBh7Qgkqt/SLBTxQ1bkLLRzX1w+WvfxgZ1s3ufnn7bdf5F4cWAeJt3XhSh+WmBW3QeX8dZJT4UnnzR7HGSAeEJ6tKH4uVVCZYzI8Mg2/4vFt+BinOzEGIl3jcRzGrajaw82Qo532kc2jmFRRLIq2lnv0FwmdrxV8f4S1l2ZPYl9M8/J0jKbmCzSy7cnmwVuirGTIEhBO2xY35U1iWWQhj3+b5ESGuWm50bbesTMSI8WH0cuG3lLDCXSoEKzuSE99r8PHMTLI/gqr69HQaOUvHP/+FL7qlhacfgiU8haAUELBkioTTPbJtOe8OoHVFOBiTOcf72bgXJ1RIq864V5PcYQdHjhfX4Z7NBHcaboa/+bZ5o8fj0P8KfQBAKfcV2IbGyTt716Shhb0Ud+RgS4ZMRKt73uqjSKud9KoB8/Vd48ZagircKb+N5lbY1DRYLpfFcMVnlFMPwdAcwBtZe5QSHDs4di4E6LNHjBKZnfzl6oo=",
+        "topic": "unixos_topic1"        
+      },
+      "cryptoSettings" : {
+        "projID": "vivid-lane-348516",
+        "locationId": "global",
+        "keyRingId": "my-keyring",
+        "keyId": "my-asymmetric-encryption-key",
+        "keyVersionId": "1"
+      },
+      "MongoSettings": {
+        "mongoServer": "cluster0.n5zh5q1.mongodb.net",
+        "mongoUser": "unixos",
+        "mongoPassword": "S8fS3zrqOwL3cW01OcyweBw6oStD902x24X5mg4izX2gQvDujrFmGACHsMpSpErCkViwOux8C1joKGVntEa5e2GqFtuvNC4yISOa/Guk2hEFKIz2/4yDAtQ3fRA+wWZOQaAMxWrS3GS411kfU0OjtOnL6+nOe6RxmbWZEfqizeJfn2CD8oQtjx+PByqRKaQf7J9PC7FTjrqS3NFM+/2oPbo2EKDyqF58zSeWNzGb5Ovsk+5uIqfCmdoWBAZkTS5aqYZWMl9yTNw5x2bAqXHipoTqS1ysUX6OsLsCPAJk8eAwciGeLDdoRX1lilkHTvMQlQTaqsu4lUb1/hJrwzk93xBdqRI7AUMnV4ULZDIYiO6aH4d1rQNKvxSOurM6lAv+P/vU89MBNc/l4DK/jqWITty7n1Q4LU9kWEo3PcX0gHEywTjEeV/QaR8VfqdinO2ljSqLnj9c7ZBm8bdSLEGdeIq3kPzOgfA39/re+IYFAtjPCDnLin5VdndBwvkfE4bjqzwLZ8MtVziwWh5ht8ytmjX64I5s2sFquOVG/tHSmpYs1VttXFDeUyMMW5U0TC+1JMdQEr/Q0g1blBAM8IUSY17ojm8ci7HpPKCZMsYxp1s7J4DwCugtS8c4/uRTKzFOD5/ts7yi9Vkw/SBxITSqXHutU8n9hlqHgwWZ25lFTuw=",
+        "dbName": "AliDB1",
+        "collectionName": "Messages"
+      }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-service-account-credentials
+type: Opaque
+stringData: 
+  sa_json: |-
+    {
+    "type": "service_account",
+    "project_id": "vivid-lane-348516",
+    "private_key_id": "8ba425b81b4389cbe99889e858c3337f160300dc",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDZxi4nOppJv7iY\nhCcdILouXE7pzTMDqmxPugAqrhbobNb4Aazb1W7rgIloRFyQVHGwkPh3GYvsBbRM\nMBDO3tNdEybG/Wlv+AfRyKY8xVGExPgt9gHWZg/Gi9KMGqqlwiqil4dULUQHtXuM\ntTscA4KhSGLYMoFWcjoQ+kzIa+cfDx73ZqkPXMeos8qmJ4LTNXYmmSeNZP+yy51Q\nEbXGAAolgQXBgRJmWyUL1Ne6Rx58a1uUYEQ/eZU0Zux0+JIiOsIfFIzVrKy87XNE\n1iMdvfs7IZwAhUk358AV7VU7epjyZlBJT3ZzPzfLANg6q4Ub8Qou7M8KJ9DfzIkl\nMW4129sNAgMBAAECggEAAQtLf/7HQUoPbeMNpw7bEsswbgdwXGuc2VscaxFnWv7t\nKODCgvXuR49eZmpCG7b+MIAHzDiktj1h8PSmTBVcrBgez1wtMaluMoa3nM/gMysi\nixLlQCecRV48LMvRAv9kKI4Z+MJphLEFR96XwVs7T6gcb0Nqhbgo64wmPP4RztRy\nUxrispMrcQtluin+RTxsxLdszsDoUpwitmEj+b3T/7YWX0UnDxdj+3IgGEXJpGms\ncs/wltqzxv6s6scgP2H6McD76ebmKQ3fBwjdfZNpdV/ZcogtCstV1MW70eC9thQu\nigj583XULJwYeXu4htGh6oJ5MYNqUMx91sBOVNVokQKBgQDs0tuXFQ5y00UYlMfm\n4XYbRpHJE2iHOlEwWoED00GVqgbebw/bIRlvoJoq43MTE2q0qiV8iKLTSWJ3z3r+\nZ2uhihA7b7JRBY99RTqiIiwcrc/RZZ6C8HRspQhwZ9nZAUlFdNo9JkxIETVEoqsr\nfHm3o+yyEw8dkCRqxTIRq9RzdQKBgQDraHFpIghV5EfjzKR0SQunMo4PdbIPWNJX\nRfdlHafoE/VL6Z2Uc4yE/iLTvzQAF2isXk2xZMDUkbVHtSzmIoNjsRrQ7Abc0IZJ\nJ+XyXvjcoGm9t+wKip5cuPm4LUKjuDY+iMUpUaQB/f21DEYy+ZJx8K4RdyjMyj3H\nhjk+bU7OOQKBgQCWoAogjrjw2WUCHGcEdvQapwjEXj7Ge5X17ipOl4gIO+tAgF0S\nX3wBHqHPk3i2ckwU+n77NSByyCMD1wgAVSEEzn5Cf2ln1OSNpYGEa72ow/gA0+Q8\nndk+3LyAWd0aA5Jpxcekyv4LfD5oGBpMf1AfN/iszih4AhzXd/K/gI2QnQKBgGVZ\n+joBZQVV233ARa2rJVE++tq9GYRyAV2ByhnGwtuwfBPK6QVZGk7H+8aes4y2h2Ju\n15RghIUAlsPgxQvwIBFz1s/MTsgTHz2v59iJ+ytCBUShQwbm13ekTB93nRFP5krW\nJ8y6UZpp+ClSt4aK3PohXVA3tWE2UZLtvweZmCxBAoGAWY2wIPxbGQ3R7SSeubp4\n+Xx3zg1uK5IZHDP/JGDQI/m2ELVdZ/OGumminWctoOaU97Zmi5X2LVVTppVPvkOZ\nNgWwV47yHGnUJCsNDyB9IfoQt0U3ftQp31/Q4v+glc0IyttU1/TdZWOjqCuCSIbB\nrtk6/J8eftQCZyMJn+8Xem8=\n-----END PRIVATE KEY-----\n",
+    "client_email": "svc-myaccount@vivid-lane-348516.iam.gserviceaccount.com",
+    "client_id": "101562493586084478222",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/svc-myaccount%40vivid-lane-348516.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafkaconsumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafkaconsumer
+  template:
+    metadata:
+      labels:
+        app: kafkaconsumer
+    spec:
+      volumes:
+      - name: service-account-key
+        secret:
+          secretName: svcaccount-key 
+      - name: kafkaconsumer-volume
+        configMap:
+          name: kafkaconsumer-config
+      - name: service-account-credentials-volume
+        secret:
+          secretName: my-service-account-credentials
+          items:
+          - key: sa_json
+            path: sa_credentials.json          
+      containers:
+      - name: kafkaconsumer
+        image: CONSUMER_IMAGE
+        volumeMounts:
+        - name: kafkaconsumer-volume
+          mountPath: /app/config
+        - name: service-account-credentials-volume
+          mountPath: /app/secrets
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app/secrets/sa_credentials.json
+        ports:
+        - containerPort: 50001
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 50001
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 50001          
+---          
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafkaconsumer
+spec:
+  type: LoadBalancer
+  selector:    
+    app: kafkaconsumer
+  ports:
+  - protocol: TCP
+    port: 51000
+    targetPort: 50001
+    name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pub-ingress
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: kafkaconsumer
+            port:
+              number: 51000
