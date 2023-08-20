@@ -73,8 +73,8 @@ jobs:
     - name: Create image tag
       run: echo "IMAGE_TAG=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:$GITHUB_SHA" >> $GITHUB_ENV
       
-    - name: Lock image version in deployment.yaml
-      run: sed -i 's|CONSUMER_IMAGE|${{ env.IMAGE_TAG }}|g' deployment.yaml
+    - name: Lock image version in deployment.yml
+      run: sed -i 's|CONSUMER_IMAGE|${{ env.IMAGE_TAG }}|g' deployment.yml
     
     - name: Build Docker image
       run: docker build --tag "${{ env.IMAGE_TAG }}" .
@@ -85,4 +85,4 @@ jobs:
     #
     # Deploy to GKE    
     - name: Deploy to GKE
-      run: kubectl apply -f deployment.yaml
+      run: kubectl apply -f deployment.yml
