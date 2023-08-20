@@ -92,11 +92,11 @@ spec:
         - containerPort: 50001
         livenessProbe:
           httpGet:
-            path: /consumer/healthcheck
+            path: /healthcheck
             port: 50001
         readinessProbe:
           httpGet:
-            path: /consumer/healthcheck
+            path: /healthcheck
             port: 50001          
 ---          
 apiVersion: v1
