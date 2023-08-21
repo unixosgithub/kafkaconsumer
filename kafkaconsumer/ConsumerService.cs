@@ -18,22 +18,20 @@ namespace kafkaconsumer
 {
     public class ConsumerService : IHostedService
     {
-        private readonly ClientConfig _clientConfig;
-        private readonly ConsumerBuilder<string, string> _consumerBuilder;
-        private readonly Confluent.Kafka.IConsumer<string, string> _consumer;
+        private readonly ClientConfig _clientConfig;        
         private readonly string _topic;
         private CancellationTokenSource _cancellationToken;
         private readonly IDecryptAsymmetric _decryptAsymmetric;
         private readonly IConsumerSettings _consumerSettings;
-        private readonly IMongoHelper _mongoHelper;       
+        private readonly IConsumerClient _consumerClient; 
 
 
-        public ConsumerService(IConfiguration config, IDecryptAsymmetric decryptAsymmetric, IMongoHelper mongoHelper)
+        public ConsumerService(IConfiguration config, IDecryptAsymmetric decryptAsymmetric, IConsumerClient consumerClient /*, IMongoHelper mongoHelper*/)
         {
             _consumerSettings = config?.GetSection("KafkaSettings")?.Get<ConsumerSettings>();            
 
             _decryptAsymmetric = decryptAsymmetric;
-            _mongoHelper = mongoHelper;
+            _consumerClient = consumerClient;
 
             _clientConfig = new ConsumerConfig()
             {
@@ -69,63 +67,15 @@ namespace kafkaconsumer
         
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            try
+            do
             {
-                var consumerBuilder = new ConsumerBuilder<Ignore, string>(_clientConfig);
-                
-                using (var consumer = consumerBuilder.Build())
-                {                                      
-                    try
-                    {                        
-                        consumer.Subscribe(_topic);
-                        while (!cancellationToken.IsCancellationRequested)  
-                        {
-                            ConsumeResult<Ignore, string> readResult = null;
-                            try
-                            {
-                                
-                                readResult = consumer.Consume(cancellationToken);
-
-                                if (readResult.IsPartitionEOF)
-                                {
-                                    continue;
-                                }
-
-                                if (readResult.Message == null)
-                                    continue;
-
-                                if (!string.IsNullOrWhiteSpace(readResult?.Message?.Value?.ToString()))
-                                {
-                                    await _mongoHelper?.WriteToDB(readResult?.Message?.Value?.ToString());
-                                }
-                            }
-                            catch (Exception ex) 
-                            { 
-                                Console.WriteLine($"Exception in Consumer while reading messages from the topic:{ex.Message}");
-                            }
-                            finally 
-                            {
-                                if (readResult != null && !readResult.IsPartitionEOF)
-                                {
-                                    consumer.StoreOffset(readResult);
-                                }
-                            }
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {                        
-                        consumer.Close();
-                    }
-                    finally
-                    {
-                        consumer.Close();
-                    }
+                var initResult = _consumerClient.Initialize(_clientConfig, _topic, cancellationToken);
+                if (initResult.Exception == null)
+                {
+                    await Task.CompletedTask;
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex.Message);                
-            }           
+            } while(!cancellationToken.IsCancellationRequested);            
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

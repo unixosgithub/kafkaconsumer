@@ -22,6 +22,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSingleton<IDecryptAsymmetric, DecryptAsymmetric>();
 builder.Services.AddSingleton<IMongoHelper, MongoHelper>();
+builder.Services.AddSingleton<IConsumerClient, ConsumerClient>();
 builder.Services.AddSingleton<IHostedService, ConsumerService>();
 
 var app = builder.Build();
