@@ -20,8 +20,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IConsumerSettings, ConsumerSettings>();
-builder.Services.AddSingleton<IMongoSettings, MongoSettings>();
 builder.Services.AddSingleton<IDecryptAsymmetric, DecryptAsymmetric>();
 builder.Services.AddSingleton<IMongoHelper, MongoHelper>();
 builder.Services.AddSingleton<IHostedService, ConsumerService>();

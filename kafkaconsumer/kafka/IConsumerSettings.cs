@@ -1,4 +1,6 @@
-﻿namespace kafkaconsumer.Kafka
+﻿using Confluent.Kafka;
+
+namespace kafkaconsumer.Kafka
 {
     public interface IConsumerSettings
     {
@@ -9,5 +11,11 @@
         string SaslPassword { get; set; }
         string Topic { get; set; }
         string GroupId { get; set; }
+
+        bool EnableAutoOffsetStore { get; set; }
+        bool EnableAutoCommit { get; set; }
+        int AutoCommitIntervalMs { get; set; }
+
+        AutoOffsetReset AutoOffsetReset { get; set; }
     }
 }

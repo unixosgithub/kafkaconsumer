@@ -1,4 +1,6 @@
-﻿using Confluent.Kafka;
+﻿using Avro;
+using Avro.Generic;
+using Confluent.Kafka;
 using kafkaconsumer.Kafka;
 using kafkaconsumer.mongo;
 using System.Diagnostics;
@@ -7,6 +9,10 @@ using System.Text.Json;
 using static Confluent.Kafka.ConfigPropertyNames;
 using MongoDB.Driver;
 using kafkaconsumer.Crypt;
+using Confluent.SchemaRegistry.Serdes;
+using Confluent.SchemaRegistry;
+using System.Security.Cryptography.Xml;
+using Confluent.Kafka.SyncOverAsync;
 
 namespace kafkaconsumer
 {
@@ -37,6 +43,11 @@ namespace kafkaconsumer
                 SaslUsername = _consumerSettings?.SaslUsername,
                 SaslPassword = _consumerSettings?.SaslPassword,
                 GroupId = _consumerSettings?.GroupId,
+
+                EnableAutoOffsetStore = false,
+                EnableAutoCommit = true,
+                AutoCommitIntervalMs = 1000,
+                
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
 
@@ -55,39 +66,59 @@ namespace kafkaconsumer
                 }                                           
             }                        
         }
-
+        
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             try
-            {                
-                using (var consumerBuilder = new ConsumerBuilder
-                    <Ignore, string>(_clientConfig).Build())
-                {
-                    consumerBuilder.Subscribe(_topic);                    
-
+            {
+                var consumerBuilder = new ConsumerBuilder<Ignore, string>(_clientConfig);
+                
+                using (var consumer = consumerBuilder.Build())
+                {                                      
                     try
-                    {
-                        while (!cancellationToken.IsCancellationRequested)
+                    {                        
+                        consumer.Subscribe(_topic);
+                        while (!cancellationToken.IsCancellationRequested)  
                         {
-                            var readResult = consumerBuilder.Consume(cancellationToken);
-
-                            if (readResult.IsPartitionEOF)
+                            ConsumeResult<Ignore, string> readResult = null;
+                            try
                             {
-                                continue;
+                                
+                                readResult = consumer.Consume(cancellationToken);
+
+                                if (readResult.IsPartitionEOF)
+                                {
+                                    continue;
+                                }
+
+                                if (readResult.Message == null)
+                                    continue;
+
+                                if (!string.IsNullOrWhiteSpace(readResult?.Message?.Value?.ToString()))
+                                {
+                                    await _mongoHelper?.WriteToDB(readResult?.Message?.Value?.ToString());
+                                }
                             }
-
-                            if (readResult.Message == null)
-                                continue;
-                            
-                            if (!string.IsNullOrWhiteSpace(readResult?.Message?.Value))
+                            catch (Exception ex) 
+                            { 
+                                Console.WriteLine($"Exception in Consumer while reading messages from the topic:{ex.Message}");
+                            }
+                            finally 
                             {
-                                await _mongoHelper?.WriteToDB(readResult?.Message?.Value);                                
+                                if (readResult != null && !readResult.IsPartitionEOF)
+                                {
+                                    consumer.StoreOffset(readResult);
+                                }
                             }
                         }
                     }
                     catch (OperationCanceledException)
                     {                        
-                        consumerBuilder.Close();
+                        consumer.Close();
+                    }
+                    finally
+                    {
+                        consumer.Close();
                     }
                 }
             }
