@@ -24,6 +24,7 @@ builder.Services.AddSingleton<IDecryptAsymmetric, DecryptAsymmetric>();
 builder.Services.AddSingleton<IMongoHelper, MongoHelper>();
 builder.Services.AddSingleton<IConsumerClient, ConsumerClient>();
 builder.Services.AddSingleton<IHostedService, ConsumerService>();
+builder.Services.AddSingleton<kafkaconsumer.Logging.ILogger, kafkaconsumer.Logging.Logger>();
 
 var app = builder.Build();
 

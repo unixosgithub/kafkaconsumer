@@ -14,6 +14,7 @@ namespace kafkaconsumer.mongo
         private IMongoCollection<MongoDataDocument> _mongoCollection;
         private readonly MongoClient _mongoClient;
         private readonly IMongoSettings _mongoSettings;
+        private readonly ICryptoSettings _cryptoSettings;
 
         public MongoHelper(IConfiguration config, IDecryptAsymmetric decryptAsymmetric)
         {
@@ -26,8 +27,8 @@ namespace kafkaconsumer.mongo
 
             // Decrypt the password
             string mongoPassword = string.Empty;
-            var cryptoSettings = _decryptAsymmetric?.GetConfigSettings();
-            if ((cryptoSettings != null))
+            _cryptoSettings = _decryptAsymmetric?.GetConfigSettings();
+            if ((_cryptoSettings != null))
             {                
                 byte[] mongocipherText = Convert.FromBase64String(_mongoSettings?.MongoPassword);
                 if (mongocipherText?.Length > 0)
@@ -57,6 +58,10 @@ namespace kafkaconsumer.mongo
             }
         }
 
+        public string GetProjID()
+        {
+            return _cryptoSettings?.ProjId ?? string.Empty;
+        }
         public async Task WriteToDB(string message)
         {
             if (!string.IsNullOrWhiteSpace(message))

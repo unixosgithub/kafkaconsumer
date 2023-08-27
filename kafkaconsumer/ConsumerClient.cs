@@ -1,8 +1,10 @@
 ﻿using Confluent.Kafka;
+using kafkaconsumer.Crypt;
 using kafkaconsumer.Kafka;
 using kafkaconsumer.mongo;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using System.Threading;
+using logging = kafkaconsumer.Logging;
 
 namespace kafkaconsumer
 {
@@ -10,10 +12,13 @@ namespace kafkaconsumer
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly IMongoHelper _mongoHelper;
+        private readonly logging.ILogger _logger;
+        private readonly string _projId;
 
-        public ConsumerClient(IMongoHelper mongoHelper) 
+        public ConsumerClient(IMongoHelper mongoHelper, logging.ILogger logger) 
         {
             _mongoHelper = mongoHelper;
+            _logger = logger;
         }
 
         public void Close()
@@ -22,7 +27,7 @@ namespace kafkaconsumer
         }
 
         public Task Initialize(ClientConfig config, string topic, CancellationToken cancellationToken)
-        {
+        {            
             return ProcessMessages(new ConsumerBuilder<Ignore, string>(config), topic, cancellationToken);
         }
 
@@ -55,12 +60,13 @@ namespace kafkaconsumer
 
                                     if (!string.IsNullOrWhiteSpace(readResult?.Message?.Value?.ToString()))
                                     {
+                                        await _logger?.LogInfo(_mongoHelper?.GetProjID(), "Writing Document to MongoDB");
                                         await _mongoHelper?.WriteToDB(readResult?.Message?.Value?.ToString());
                                     }
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"Exception in Consumer while reading messages from the topic:{ex.Message}");
+                                    await _logger.LogError(_mongoHelper?.GetProjID(), $"Exception in Consumer while reading messages from the topic:{ex.Message}");
                                 }
                                 finally
                                 {
