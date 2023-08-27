@@ -14,7 +14,7 @@ namespace kafkaconsumer.Logging
 
         public Logger()
         {
-            var _logClient = LoggingServiceV2Client.Create();
+            _logClient = LoggingServiceV2Client.Create();
             _resource = new MonitoredResource
             {
                 Type = "global"
@@ -40,7 +40,7 @@ namespace kafkaconsumer.Logging
             Type myType = typeof(Logger);
             string entrySeverity = logEntry.Severity.ToString().ToUpper();
             logEntry.TextPayload =
-                $"{messageId} {entrySeverity} {myType.Namespace}.LoggingSample - {message}";                       
+                $"{messageId} {entrySeverity} {myType.Namespace}.LogInfo - {message}";                       
 
             // Add log entry to collection for writing. Multiple log entries can be added.
             IEnumerable<LogEntry> logEntries = new LogEntry[] { logEntry };
@@ -63,7 +63,7 @@ namespace kafkaconsumer.Logging
             Type myType = typeof(Logger);
             string entrySeverity = logEntry.Severity.ToString().ToUpper();
             logEntry.TextPayload =
-                $"{messageId} {entrySeverity} {myType.Namespace}.LoggingSample - {message}";
+                $"{messageId} {entrySeverity} {myType.Namespace}.LogError - {message}";
 
             // Add log entry to collection for writing. Multiple log entries can be added.
             IEnumerable<LogEntry> logEntries = new LogEntry[] { logEntry };
